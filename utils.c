@@ -27,14 +27,19 @@ long get_current_time(t_time_unit unit)
     return (-1);
 }
 
-void philo_doing(long action_time)
+/* microsecond */
+void	philo_wait(t_philo *philo, long wait)
 {
-    long start;
-
-    start = get_current_time(MICROSECOND);
-    while (get_current_time(MICROSECOND) - start < action_time * 1e3)
-        usleep(10);
+	if (wait > philo->time_to_die) 
+        wait = philo->time_to_die;
+	usleep(wait);
+	philo->action_time = philo->table->fiesta_starts_time - get_current_time(MILLISECOND);
+	if (wait == philo->time_to_die)
+		monitor_log(DIED, philo);
+	else
+		philo->time_to_die -= wait;
 }
+
 
 void error_exit(const char *err_msg)
 {

@@ -83,7 +83,7 @@ typedef struct s_fork
 {
     t_mtx fork;
     int fork_id;
-    int ocupied;
+    int occupied;
 }   t_fork;
 
 typedef struct s_philo //a philo is a thread
@@ -93,7 +93,8 @@ typedef struct s_philo //a philo is a thread
     t_fork *first_fork;
     t_fork *second_fork;
     long meals_count;
-    long last_meal_time;
+    long action_time;
+    long time_to_die;
     t_table *table;
 }   t_philo;
 

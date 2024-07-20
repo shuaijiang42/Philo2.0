@@ -12,21 +12,55 @@
 
 #include "philo.h"
 
-static void think(t_philo *philo)
+/* static void think(t_philo *philo)
 {
 	monitor_log(THINKING, philo);
-	while(philo->first_fork->ocupied != 0 && !philo->table->fiesta_ends)
+	while(philo->first_fork->occupied != 0 && !philo->table->fiesta_ends)
 		usleep(10);
 	pthread_mutex_lock(&philo->first_fork->fork);
-	printf("here %d\n", philo->first_fork->ocupied);
-	philo->first_fork->ocupied = 1;
-	printf("here2 %d\n", philo->first_fork->ocupied);
+	philo->first_fork->occupied = 1;
 	monitor_log(TAKE_FIRST_FORK, philo);
-	while(philo->second_fork->ocupied != 0 && !philo->table->fiesta_ends)
+	while(philo->second_fork->occupied != 0 && !philo->table->fiesta_ends)
 		usleep(10);
 	pthread_mutex_lock(&philo->first_fork->fork);
-	philo->first_fork->ocupied = 1;	
+	philo->first_fork->occupied = 1;	
 	monitor_log(TAKE_SECOND_FORK, philo);
+} */
+
+#define TIMEOUT 1000 // Time to wait in microseconds before giving up
+
+static void think(t_philo *philo)
+{
+    monitor_log(THINKING, philo);
+
+    // Try to pick up the first fork
+    while (philo->first_fork->occupied != 0 && !philo->table->fiesta_ends)
+        usleep(10);
+
+    pthread_mutex_lock(&philo->first_fork->fork);
+    philo->first_fork->occupied = 1;
+    monitor_log(TAKE_FIRST_FORK, philo);
+
+    // Try to pick up the second fork with timeout
+    int waited_time = 0;
+    while (philo->second_fork->occupied != 0 && !philo->table->fiesta_ends)
+    {
+        usleep(10);
+        waited_time += 10;
+        if (waited_time >= TIMEOUT)
+        {
+            // Release the first fork and retry
+            philo->first_fork->occupied = 0;
+            pthread_mutex_unlock(&philo->first_fork->fork);
+            usleep(TIMEOUT); // Wait a bit before retrying
+            think(philo);
+            return;
+        }
+    }
+
+    pthread_mutex_lock(&philo->second_fork->fork);
+    philo->second_fork->occupied = 1;
+    monitor_log(TAKE_SECOND_FORK, philo);
 }
 
 static void eat(t_philo *philo)
@@ -38,12 +72,13 @@ static void eat(t_philo *philo)
 		return ;
 	}
 	monitor_log(EATING, philo);
-	philo_doing(philo->table->time_to_eat);
-	pthread_mutex_unlock(&philo->first_fork->fork);
-	philo->first_fork->ocupied = 0;	
-
-	pthread_mutex_unlock(&philo->second_fork->fork);
-	philo->first_fork->ocupied = 0;	
+	philo_wait(philo->table->time_to_eat);
+  
+    philo->first_fork->occupied = 0;
+    pthread_mutex_unlock(&philo->first_fork->fork);
+    
+    philo->second_fork->occupied = 0;
+    pthread_mutex_unlock(&philo->second_fork->fork);
 
 }
 
@@ -52,7 +87,7 @@ static void psleep(t_philo *philo)
     if (philo->table->fiesta_ends)
 		return ;
 	monitor_log(SLEEPING, philo);
-	philo_doing(philo->table->time_to_eat);
+	philo_wait(philo->table->time_to_eat);
 
 }
 
@@ -85,7 +120,7 @@ void    routine(t_table *table)
 	if (table->philo_nbr == 1)
 	{
 		table->fiesta_starts_time = get_current_time(MILLISECOND);
-		usleep(table->time_to_die * 1e3);
+		usleep(table->time_to_die);
 		monitor_log(DIED, &table->philos[0]);
 		return;
 	}

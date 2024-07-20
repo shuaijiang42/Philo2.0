@@ -17,21 +17,19 @@
 
 static void    write_log(t_philo_status status, t_philo *philo)
 {
-    long elapse;
-
-    elapse = get_current_time(MILLISECOND) - philo->table->fiesta_starts_time;
+    long time = philo->action_time;
     if (status == EATING)
-        printf("%ld %d is eating\n", elapse, philo->philo_id);
+        printf("%ld %d is eating\n", time, philo->philo_id);
     else if (status == SLEEPING)
-        printf("%ld %d is sleeping\n", elapse, philo->philo_id);
+        printf("%ld %d is sleeping\n", time, philo->philo_id);
     else if (status == THINKING)
-        printf("%ld %d is thinking\n", elapse, philo->philo_id);
+        printf("%ld %d is thinking\n", time, philo->philo_id);
     else if (status == TAKE_FIRST_FORK)
-        printf("%ld %d has taken the first fork[%d]\n", elapse, philo->philo_id, philo->first_fork->fork_id);
+        printf("%ld %d has taken the first fork[%d]\n", time, philo->philo_id, philo->first_fork->fork_id);
     else if (status == TAKE_SECOND_FORK)
-        printf("%ld %d has taken the second fork[%d]\n", elapse, philo->philo_id, philo->second_fork->fork_id);
+        printf("%ld %d has taken the second fork[%d]\n", time, philo->philo_id, philo->second_fork->fork_id);
     else if (status == DIED)
-        printf("%ld %d died\n", elapse, philo->philo_id);
+        printf("%ld %d died\n", time, philo->philo_id);
 }
 
 void    monitor_log(t_philo_status status, t_philo *philo)
@@ -50,7 +48,6 @@ void    monitor_log(t_philo_status status, t_philo *philo)
         }
         else if (status == EATING)
         {
-            philo->last_meal_time = get_current_time(MILLISECOND);
             philo->meals_count++;
             if (table->max_meals > 0 && philo->meals_count == table->max_meals)
             {
