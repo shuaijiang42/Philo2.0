@@ -15,9 +15,12 @@
 // action 2 dormir
 // action 3 morir
 
-static void    write_log(t_philo_status status, t_philo *philo)
+static void write_log(t_philo_status status, t_philo *philo)
 {
     long time = philo->action_time;
+    // printf("action time 1: %ld \n", time);
+    if (philo->table->fiesta_ends)
+        return ;
     if (status == EATING)
         printf("%ld %d is eating\n", time, philo->philo_id);
     else if (status == SLEEPING)
@@ -32,18 +35,29 @@ static void    write_log(t_philo_status status, t_philo *philo)
         printf("%ld %d died\n", time, philo->philo_id);
 }
 
-void    monitor_log(t_philo_status status, t_philo *philo)
+/* static void write_log(t_philo_status status, t_philo *philo, char *log_msg)
 {
-    static  pthread_mutex_t log = PTHREAD_MUTEX_INITIALIZER;
+
+}*/
+
+void monitor_log(t_philo_status status, t_philo *philo)
+{
+    static pthread_mutex_t log = PTHREAD_MUTEX_INITIALIZER;
     t_table *table = philo->table;
 
-    if (!table->fiesta_ends)
-    {
-        pthread_mutex_lock(&log);
+    if (table->fiesta_ends)
+        return ;
+    pthread_mutex_lock(&log);
+        if (status == THINKING || status == TAKE_FIRST_FORK || status == TAKE_SECOND_FORK)
+            philo->action_time = get_current_time(MILLISECOND) - table->fiesta_starts_time;
         write_log(status, philo);
-        if (status==DIED)
+        if (status == DIED)
         {
+            pthread_mutex_lock(&table->table_mutex);
             table->fiesta_ends = 1;
+            pthread_mutex_unlock(&table->table_mutex);
+            pthread_mutex_unlock(&log);
+
             return;
         }
         else if (status == EATING)
@@ -54,14 +68,15 @@ void    monitor_log(t_philo_status status, t_philo *philo)
                 table->full_philo_nbr++;
                 if (table->full_philo_nbr == table->philo_nbr)
                 {
+                    pthread_mutex_lock(&table->table_mutex);
                     table->fiesta_ends = 1;
+                    pthread_mutex_unlock(&table->table_mutex);
                     printf("Yeah, all philos are full and happy\n");
-                    return; 
+                    pthread_mutex_unlock(&log);
+
+                    return;
                 }
-            }    
+            }
         }
         pthread_mutex_unlock(&log);
-   }
-
 }
-

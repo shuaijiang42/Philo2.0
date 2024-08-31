@@ -28,16 +28,26 @@ long get_current_time(t_time_unit unit)
 }
 
 /* microsecond */
-void	philo_wait(t_philo *philo, long wait)
+void	philo_wait(t_philo *philo, long wait, t_philo_status status)
 {
+
 	if (wait > philo->time_to_die) 
         wait = philo->time_to_die;
-	usleep(wait);
-	philo->action_time = philo->table->fiesta_starts_time - get_current_time(MILLISECOND);
+    if (status != NOTHING && status !=DIED)
+	    philo->action_time = get_current_time(MILLISECOND) - philo->table->fiesta_starts_time;
+        monitor_log(status, philo);
+    usleep(wait);
 	if (wait == philo->time_to_die)
-		monitor_log(DIED, philo);
+	{
+        status = DIED;
+        monitor_log(status, philo);
+        return ;
+    }
+    if (status == EATING)
+        philo->time_to_die = philo->table->time_to_die;
 	else
 		philo->time_to_die -= wait;
+        //printf("%ld \n", philo->time_to_die);
 }
 
 

@@ -50,6 +50,7 @@ typedef enum e_philo_status
     TAKE_FIRST_FORK,
     TAKE_SECOND_FORK,
     DIED,
+    NOTHING,
 }   t_philo_status;
 
 /* Time units */
@@ -146,10 +147,10 @@ void clean_table(t_table *table);
 
 
 //***************         ***************
-void    routine(t_table *table);
+int    routine(t_table *table);
 
 void    monitor_log(t_philo_status status, t_philo *philo);
-void philo_doing(long action_time);
+void	philo_wait(t_philo *philo, long wait, t_philo_status status);
 
 
 //*******************************   BETTER UX    *******************************

@@ -20,7 +20,9 @@ int main(int args, char **argv)
     if (args == 5 || args == 6)
     {
         parse_input(&table, argv);
+        printf("time_to_die 1: %ld\n",table.time_to_die );
         table_init(&table);
+        printf("time_to_die 2: %ld\n", table.time_to_die);
         routine(&table);
         clean_table(&table);
         return 0;
